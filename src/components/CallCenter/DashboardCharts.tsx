@@ -19,7 +19,6 @@ export default function DashboardCharts({ leadData, callData }: Props) {
           <ResponsiveContainer width="100%" height="90%">
               <ComposedChart data={leadData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
-                      <linearGradient id="colAguard" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2}/><stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/></linearGradient>
                       <linearGradient id="colRecDia" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/><stop offset="95%" stopColor="#22c55e" stopOpacity={0}/></linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#262626" />
@@ -27,16 +26,24 @@ export default function DashboardCharts({ leadData, callData }: Props) {
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#a3a3a3', fontSize: 12 }} />
                   <Tooltip contentStyle={{ backgroundColor: '#171717', border: '1px solid #262626', borderRadius: '12px', color: '#ededed' }} />
                   <Legend iconType="circle" />
+                  
+                  {/* 1. Total (Linha Azul) */}
                   <Area type="monotone" dataKey="total" name="Total" stroke="#3b82f6" fill="none" strokeWidth={2} />
-                  <Area type="monotone" dataKey="rec_dia" name="Rec. Dia" stroke="#22c55e" fill="url(#colRecDia)" strokeWidth={2} stackId="1" />
-                  <Area type="monotone" dataKey="rec_depois" name="Rec. 7 Dias" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.1} strokeWidth={2} stackId="1" />
-                  <Area type="monotone" dataKey="aguardando" name="Aguardando" stroke="#f59e0b" fill="url(#colAguard)" strokeWidth={2} />
-                  <Line type="monotone" dataKey="atendidas" name="Atendidas" stroke="#10b981" strokeWidth={3} dot={{r:3}} />
+                  
+                  {/* 2. Recuperado no dia (Verde) */}
+                  <Area type="monotone" dataKey="rec_dia" name="Recuperado no dia" stroke="#22c55e" fill="url(#colRecDia)" strokeWidth={2} stackId="1" />
+                  
+                  {/* 3. Recuperado 7 dias (Azul Claro) */}
+                  <Area type="monotone" dataKey="rec_depois" name="Recuperado 7 dias" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.1} strokeWidth={2} stackId="1" />
+
+                  {/* 4. Voltou antes (Roxo) */}
+                  <Area type="monotone" dataKey="rec_antes" name="Voltou Antes" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.1} strokeWidth={2} stackId="1" />
+                  
               </ComposedChart>
           </ResponsiveContainer>
       </div>
 
-      {/* Gráfico Chamadas */}
+      {/* Gráfico Chamadas (MANTIDO) */}
       <div className={styles.card}>
           <h3 className={styles.title}><Phone size={20} /> Performance de Ligações</h3>
           <ResponsiveContainer width="100%" height="90%">
