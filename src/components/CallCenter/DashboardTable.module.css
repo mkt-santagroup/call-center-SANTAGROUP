@@ -1,63 +1,225 @@
-.card {
-  background: #171717;
-  border-radius: 24px;
-  border: 1px solid #262626;
-  overflow: hidden;
-  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
-}
+/* src/components/CallCenter/DashboardTable.module.css */
 
-.header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #262626;
+.wrapper {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
 }
 
-.title { margin: 0; color: #ededed; }
-.count { color: #a3a3a3; font-size: 0.8rem; }
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+}
 
-.table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-
-.table th {
-  background-color: #262626;
-  color: #a3a3a3;
-  font-size: 0.75rem;
+.title {
+  font-size: 1.1rem;
   font-weight: 700;
-  text-transform: uppercase;
-  padding: 1.2rem;
+  color: #ededed;
+  margin: 0;
+}
+
+.countBadge {
+  background: #262626;
+  color: #a3a3a3;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  border: 1px solid #333;
+}
+.countBadge strong { color: #fff; margin-left: 4px; }
+
+/* TABELA */
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+  background: #171717;
+  border: 1px solid #262626;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  color: #d4d4d4;
   text-align: left;
 }
 
-.table td {
-  padding: 1.2rem;
-  border-bottom: 1px solid #262626;
-  color: #ededed;
-}
-
-.pill {
-  padding: 6px 12px;
-  border-radius: 99px;
-  font-size: 0.65rem;
-  font-weight: 800;
+.table thead th {
+  background: #262626;
+  color: #a3a3a3;
+  font-weight: 600;
+  padding: 1rem;
   text-transform: uppercase;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #404040;
   white-space: nowrap;
 }
 
-.actionBtn {
-  background: #ededed;
-  color: #171717;
-  border: none;
-  width: 36px; height: 36px;
-  border-radius: 10px;
-  cursor: pointer;
+.table tbody td {
+  padding: 1rem;
+  border-bottom: 1px solid #262626;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.table tbody tr:hover {
+  background: #1f1f1f;
+}
+
+.rowRecovered {
+  background: rgba(16, 185, 129, 0.05); /* Fundo levemente verde */
+}
+
+.passport {
+  font-family: 'Montserrat', monospace;
+  color: #737373;
+  background: #262626;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.name { font-weight: 600; color: #fff; }
+.dateMuted { color: #737373; }
+
+.standardDate {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    color: #d4d4d4;
+}
+.standardDate strong { font-size: 0.9rem; color: #ededed; }
+.standardDate span { font-size: 0.75rem; color: #737373; }
+
+.gameTime {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #d4d4d4;
+  font-weight: 500;
+}
+
+/* --- BADGES DE STATUS (CORES ATUALIZADAS) --- */
+.badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
+  gap: 6px;
+  padding: 4px 10px; /* Mais larguinho para caber o texto */
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
-.actionBtn:hover { opacity: 0.9; transform: scale(1.05); }
-.actionBtn:disabled { cursor: wait; opacity: 0.7; }
+
+/* VERDE - Recuperado Dia */
+.badgeGreen { 
+    background: rgba(34, 197, 94, 0.2); 
+    color: #4ade80; 
+    border: 1px solid rgba(34, 197, 94, 0.3); 
+}
+
+/* AZUL - Recuperado 7d */
+.badgeBlue { 
+    background: rgba(14, 165, 233, 0.2); 
+    color: #38bdf8; 
+    border: 1px solid rgba(14, 165, 233, 0.3); 
+}
+
+/* ROXO - Voltou Antes */
+.badgePurple { 
+    background: rgba(139, 92, 246, 0.2); 
+    color: #a78bfa; 
+    border: 1px solid rgba(139, 92, 246, 0.3); 
+}
+
+/* VERMELHO - Não Voltou */
+.badgeRed { 
+    background: rgba(239, 68, 68, 0.2); 
+    color: #f87171; 
+    border: 1px solid rgba(239, 68, 68, 0.3); 
+}
+
+/* LARANJA - Aguardando */
+.badgeOrange { 
+    background: rgba(245, 158, 11, 0.2); 
+    color: #fbbf24; 
+    border: 1px solid rgba(245, 158, 11, 0.3); 
+}
+
+.muted { color: #404040; }
+.empty, .loadingContainer { padding: 3rem; text-align: center; color: #737373; }
+
+/* PAGINAÇÃO */
+.paginationFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: #171717;
+    border-top: 1px solid #262626;
+}
+.rowsPerPage { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #a3a3a3; }
+.rowsPerPage select {
+    background: #262626; border: 1px solid #404040; color: #ededed;
+    padding: 4px 8px; border-radius: 6px; cursor: pointer; font-family: inherit;
+}
+.pageControls { display: flex; align-items: center; gap: 12px; }
+.pageInfo { font-size: 0.8rem; color: #a3a3a3; }
+.pageInfo strong { color: #ededed; }
+.pageBtn {
+    background: #262626; border: 1px solid #404040; color: #ededed;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; cursor: pointer; transition: all 0.2s;
+}
+.pageBtn:hover:not(:disabled) { background: #333; border-color: #525252; }
+.pageBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.attemptsData {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #a3a3a3;
+    cursor: help; /* Indica que tem tooltip nativo */
+}
+
+.attemptsData strong {
+    color: #ededed;
+    font-weight: 600;
+}
+
+/* ... (MANTENHA TODO O RESTO DO CSS) ... */
+
+/* --- HEADER ORDENÁVEL --- */
+.sortableHeader {
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.sortableHeader:hover {
+    background: #333 !important; /* Um pouco mais claro no hover */
+}
+
+.headerContent {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.activeIcon {
+    color: #3b82f6; /* Azul destaque quando está ordenado */
+}
+
+.inactiveIcon {
+    color: #404040; /* Cinza escuro quando não está ordenado */
+    opacity: 0.5;
+}

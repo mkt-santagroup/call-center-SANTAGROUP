@@ -1,103 +1,80 @@
+/* src/components/CallCenter/DateFilterPicker.module.css */
+
 .container {
-  position: relative;
-  display: inline-block;
-}
-
-.presets {
   display: flex;
-  background: #171717;
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid #262626;
-  gap: 4px;
   align-items: center;
+  gap: 8px;
+  position: relative;
 }
 
-.btn {
-  background: transparent;
-  color: #a3a3a3;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+.dropdownWrapper { position: relative; }
+
+.triggerBtn {
+  background: #262626; border: 1px solid #404040; color: #ededed;
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  border-radius: 8px; cursor: pointer; font-family: 'Montserrat', sans-serif;
+  font-size: 0.875rem; transition: all 0.2s;
+}
+.triggerBtn:hover { background: #333; border-color: #525252; }
+
+.icon { color: #a3a3a3; }
+.chevron { color: #737373; margin-left: 4px; }
+
+.menu {
+  position: absolute; top: 100%; right: 0; margin-top: 4px;
+  background: #171717; border: 1px solid #262626; border-radius: 8px;
+  padding: 4px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  z-index: 50; min-width: 220px;
+  display: flex; flex-direction: column;
 }
 
-.btn:hover:not(:disabled) {
-  background: #262626;
-  color: #ededed;
+.menuItem {
+  background: transparent; border: none; color: #d4d4d4;
+  padding: 8px 12px; text-align: left; cursor: pointer;
+  border-radius: 4px; font-size: 0.85rem; transition: background 0.2s;
+  font-family: 'Montserrat', sans-serif;
 }
+.menuItem:hover { background: #262626; color: #fff; }
+.menuItem.active { background: #262626; color: #3b82f6; font-weight: 600; }
 
-.btn.active {
-  background: #ededed;
-  color: #171717;
+/* --- CUSTOM DATE MODE --- */
+.customContainer {
+    padding: 8px; display: flex; flex-direction: column; gap: 8px;
 }
+.customHeader {
+    display: flex; align-items: center; gap: 8px; 
+    color: #a3a3a3; font-size: 0.8rem; margin-bottom: 4px;
+    border-bottom: 1px solid #262626; padding-bottom: 8px;
+}
+.backBtn {
+    background: transparent; border: none; color: #3b82f6;
+    display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 0.75rem;
+}
+.inputsRow { display: flex; flex-direction: column; gap: 4px; }
+.inputsRow label { font-size: 0.7rem; color: #737373; margin-left: 2px; }
+.dateInput {
+    background: #0a0a0a; border: 1px solid #404040; color: #ededed;
+    padding: 6px; border-radius: 4px; font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    color-scheme: dark; /* Garante que o calendário do browser fique escuro */
+}
+.applyBtn {
+    margin-top: 4px; background: #3b82f6; color: #fff; border: none;
+    padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 0.8rem;
+}
+.applyBtn:hover { background: #2563eb; }
 
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 
-.separator {
-  width: 1px;
-  height: 20px;
-  background: #262626;
-  margin: 0 4px;
+/* --- REFRESH BUTTON --- */
+.refreshBtn {
+  background: #262626; border: 1px solid #404040; color: #a3a3a3;
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; cursor: pointer; transition: all 0.2s;
 }
+.refreshBtn:hover:not(:disabled) { background: #333; color: #fff; border-color: #525252; }
+.refreshBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* Popup do Custom */
-.customPopup {
-  position: absolute;
-  top: 110%;
-  right: 0;
-  background: #171717;
-  border: 1px solid #262626;
-  padding: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  animation: fadeIn 0.2s;
-  min-width: 200px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.field label {
-  font-size: 0.75rem;
-  color: #a3a3a3;
-  font-weight: 600;
-}
-
-.field input {
-  background: #262626;
-  border: 1px solid #333;
-  color: #ededed;
-  padding: 8px;
-  border-radius: 6px;
-  font-family: inherit;
-  font-size: 0.9rem;
-  outline: none;
-}
-
-.field input::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  cursor: pointer;
-}
-
-@media (max-width: 600px) {
-  .desktopOnly { display: none; }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.spinning { animation: spin 1s linear infinite; color: #3b82f6; }

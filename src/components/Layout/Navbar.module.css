@@ -1,0 +1,97 @@
+/* src/components/Layout/Navbar.module.css */
+
+.navbar {
+  background-color: #171717; /* bg-card */
+  border-bottom: 1px solid #262626;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 0 1.5rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 1400px; /* Alinhado com o dashboard */
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: #ededed;
+  letter-spacing: -0.02em;
+}
+
+.logoHighlight {
+  color: #ef4444; /* Vermelho SantaGroup */
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #a3a3a3;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.link:hover {
+  color: #ededed;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.active {
+  color: #ededed;
+  background: #262626;
+  font-weight: 600;
+}
+
+.active svg {
+  color: #ef4444; /* Destaque ícone */
+}
+
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid #262626;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: #a3a3a3;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.logoutBtn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+@media (max-width: 768px) {
+  .logoutText { display: none; }
+  .links { gap: 0.5rem; position: relative; left: auto; transform: none; }
+  .link span { display: none; } /* Esconde texto em mobile se quiser */
+}

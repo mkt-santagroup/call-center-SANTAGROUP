@@ -1,103 +1,82 @@
 // src/components/CallCenter/CallDashboard.tsx
-import React, { useState } from 'react';
-import styles from './CallDashboard.module.css';
-import { RefreshCw, Loader2 } from 'lucide-react';
-import { subDays } from 'date-fns';
 
-// Importando os hooks separados
-import { useLeadsTable } from '@/hooks/useLeadsTable';
-import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
-
-// Componentes Visuais
+import React, { useState, useCallback } from 'react';
+import styles from './CallDashboard.module.css'; // Assumindo que você tem ou criará esse CSS básico
+import DateFilterPicker, { DateFilterState } from './DateFilterPicker';
 import DashboardKPIs from './DashboardKPIs';
 import DashboardCharts from './DashboardCharts';
 import DashboardTable from './DashboardTable';
-import DateFilterPicker, { DateFilterState } from './DateFilterPicker';
+
+// Hooks
+import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
+import { useLeadsTable } from '@/hooks/useLeadsTable';
 
 export default function CallDashboard() {
-  // 1. Estado Global do Filtro de Data (Controla ambos os hooks)
-  const [dateFilter, setDateFilter] = useState<DateFilterState>({
-    option: '7days',
-    startDate: subDays(new Date(), 6),
-    endDate: new Date()
+  // 1. Estado Global do Filtro de Data
+  const [dateFilter, setDateFilter] = useState<DateFilterState>({ 
+    option: 'today', 
+    startDate: new Date(), 
+    endDate: new Date() 
   });
 
-  // 2. Hook da Tabela (Focado em carregar linhas paginadas)
-  const { 
-    leads, 
-    loading: tableLoading, 
-    hasMore, 
-    loadMore, // Se quiser usar scroll infinito ou botão "Ver mais" depois
-    refetch: refetchTable 
-  } = useLeadsTable(dateFilter);
-
-  // 3. Hook das Métricas e Gráficos (Focado em matemática e tendências)
+  // 2. Chamada dos Hooks (passando o filtro)
   const { 
     stats, 
-    leadChartData, // <--- AQUI ESTÃO ELES
-    callChartData, // <--- E AQUI TAMBÉM
+    leadChartData, 
+    callChartData, 
     loadingMetrics, 
     refetchMetrics 
   } = useDashboardMetrics(dateFilter);
 
-  // Função para atualizar tudo manualmente
-  const handleGlobalRefresh = () => {
-    refetchTable();
-    refetchMetrics();
-  };
+  const { 
+    leads, 
+    loading: loadingTable, 
+    refetchLeads 
+  } = useLeadsTable(dateFilter);
 
-  const isLoadingAny = tableLoading || loadingMetrics;
+  // 3. Função de Reload Manual (Correção do Bug)
+  const handleRefresh = useCallback(async () => {
+    // Chama ambos os refetchs e espera terminarem
+    await Promise.all([
+      refetchMetrics(),
+      refetchLeads()
+    ]);
+  }, [refetchMetrics, refetchLeads]);
+
+  // Estado unificado de carregamento para o botão de refresh girar
+  const isLoading = loadingMetrics || loadingTable;
 
   return (
     <div className={styles.container}>
-      {/* --- HEADER --- */}
+      {/* TOPO: Filtro de Data + Botão de Reload */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-            <div className={styles.title}>
-                <h1>Gerenciamento de Ligações <span className={styles.liveBadge}>LIVE</span></h1>
-            </div>
-            <p className={styles.subtitle}>
-              {tableLoading 
-                ? 'Sincronizando dados...' 
-                : `${leads.length} leads listados nesta página.`}
-            </p>
+            <h1 className={styles.pageTitle}>Dashboard de Atendimento</h1>
+            <p className={styles.pageSubtitle}>Acompanhe o desempenho e recuperação de leads em tempo real.</p>
         </div>
-
+        
         <div className={styles.headerRight}>
             <DateFilterPicker 
-              value={dateFilter} 
-              onChange={setDateFilter} 
-              disabled={isLoadingAny} 
+                filter={dateFilter} 
+                onChange={setDateFilter} 
+                onRefresh={handleRefresh} // <--- Passando a função
+                loading={isLoading}       // <--- Passando o estado
             />
-
-            <button onClick={handleGlobalRefresh} className={styles.refreshBtn} disabled={isLoadingAny}>
-              {isLoadingAny ? <Loader2 size={18} className="spin"/> : <RefreshCw size={18}/>}
-            </button>
         </div>
       </div>
 
-      {/* --- KPIs (Cards do topo) --- */}
+      {/* KPIs (Cards) */}
       <DashboardKPIs stats={stats} />
 
-      {/* --- GRÁFICOS (Agora devidamente conectados) --- */}
-      {/* Passamos o loadingMetrics para, se quiser, mostrar um spinner nos gráficos também */}
+      {/* Gráficos */}
       <DashboardCharts 
         leadData={leadChartData} 
         callData={callChartData} 
+        loading={loadingMetrics} 
       />
 
-      {/* --- TABELA DE LEADS --- */}
-      <DashboardTable 
-        leads={leads} 
-        loading={tableLoading} 
-        onRefetch={refetchTable} 
-      />
-      
-      {/* Estilos Globais de Animação */}
-      <style jsx global>{`
-        .spin { animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-      `}</style>
+      {/* Tabela de Leads */}
+      <DashboardTable leads={leads} loading={loadingTable} />
     </div>
   );
 }

@@ -8,7 +8,7 @@
   --text-secondary: #a3a3a3;/* Texto secundário */
   --grid-color: #262626;    /* Linhas dos gráficos */
   
-  /* Cores de Status (Originais) */
+  /* Cores de Status */
   --color-blue: #3b82f6;
   --color-green: #10b981;
   --color-green-light: #22c55e;
@@ -27,7 +27,8 @@
 body {
   background-color: var(--bg-page);
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, sans-serif;
+  /* Alterado para Montserrat conforme solicitado */
+  font-family: 'Montserrat', sans-serif; 
   -webkit-font-smoothing: antialiased;
 }
 

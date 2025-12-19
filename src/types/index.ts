@@ -49,7 +49,8 @@ export interface DashboardStats {
   recuperadosDia: number;
   recuperadosDepois: number;
   recuperadosAntes: number;
-  naoRecuperados: number; // Perdidos
+  naoRecuperados: number; 
+  retorno: number;
   aguardando: number;
   totalCusto: number;
 }

@@ -98,7 +98,8 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
       atendidas: 0, 
       recuperadosDia: 0, 
       recuperadosDepois: 0, 
-      recuperadosAntes: 0, 
+      recuperadosAntes: 0,
+      retorno: 0, // <--- NOVA MÉTRICA INICIALIZADA
       naoRecuperados: 0, 
       aguardando: 0, 
       totalCusto: 0
@@ -124,6 +125,8 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
       if (foiAtendido) s.atendidas++;
 
       if (lead.is_recovered && lead.current_last_login) {
+        s.retorno++; // <--- INCREMENTA O RETORNO GERAL
+
         const loginDate = new Date(lead.current_last_login);
         const callDate = lead.called_at ? new Date(lead.called_at) : null;
         
@@ -143,7 +146,7 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
   }, [rawData, allowedDatesSet]);
 
 
-  // --- 3. GRÁFICO DE TENDÊNCIA (AGORA COM 'VOLTOU ANTES' E 'REC 7 DIAS') ---
+  // --- 3. GRÁFICO DE TENDÊNCIA ---
   const leadChartData = useMemo(() => {
     let start = dateFilter.startDate;
     let end = dateFilter.endDate || new Date();
@@ -162,7 +165,6 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
     const interval = eachDayOfInterval({ start, end });
     const safeInterval = interval.length > 365 ? interval.slice(-365) : interval;
 
-    // Inicializa o mapa com as chaves que queremos exibir
     safeInterval.forEach(d => {
         const key = format(d, 'yyyy-MM-dd');
         daysMap.set(key, { 
@@ -170,8 +172,8 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
             total: 0, 
             atendidas: 0, 
             rec_dia: 0, 
-            rec_depois: 0, // No gráfico isso será usado como "Recuperados 7 dias"
-            rec_antes: 0,  // ADICIONADO: Voltou Antes
+            rec_depois: 0, 
+            rec_antes: 0,
             aguardando: 0,
             nao_rec: 0
         });
@@ -183,28 +185,25 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
       
       if (daysMap.has(dateKey)) {
         const entry = daysMap.get(dateKey);
-        entry.total++; // Linha TOTAL
+        entry.total++; 
         
-        // Logica de Recuperação para o Gráfico
         if (lead.is_recovered && lead.current_last_login) {
             const login = new Date(lead.current_last_login);
             const call = lead.called_at ? new Date(lead.called_at) : null;
             
             if (!call || login.getTime() < call.getTime()) {
-                entry.rec_antes++; // Linha VOLTOU ANTES
+                entry.rec_antes++; 
             } 
             else if (isSameDay(login, call)) {
-                entry.rec_dia++; // Linha RECUPERADOS DIA
+                entry.rec_dia++; 
             } 
             else {
-                entry.rec_depois++; // Linha RECUPERADOS 7 DIAS (DEPOIS)
+                entry.rec_depois++; 
             }
         } else {
-            // Logica extra se quiser plotar quem ainda não recuperou
             entry.aguardando++; 
         }
 
-        // Se precisar plotar atendidas tb, mantivemos a contagem, mas vc filtra na visualização
         const history = lead.call_history || [];
         if (history.some((h: any) => (h.status||'').toLowerCase().includes('answered'))) {
             entry.atendidas++;
