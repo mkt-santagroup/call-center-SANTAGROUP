@@ -1,0 +1,25 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #171717;
+  border-radius: 24px;
+  padding: 1.5rem 2rem;
+  border: 1px solid #262626;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+  height: 350px;
+}
+
+.title {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ededed;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
