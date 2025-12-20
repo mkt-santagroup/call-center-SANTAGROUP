@@ -16,7 +16,7 @@ export default function Navbar() {
     }
   };
 
-  // Função auxiliar para verificar se o link está ativo
+  // Verifica se o link é a página atual para pintar de outra cor
   const isActive = (path: string) => router.pathname === path;
 
   return (
@@ -33,7 +33,7 @@ export default function Navbar() {
         </Link>
       </div>
 
-      {/* 2. Menu de Navegação (NOVO) */}
+      {/* 2. Menu Central (Dashboard e Disparador) */}
       <div className={styles.navMenu}>
         <Link 
             href="/" 

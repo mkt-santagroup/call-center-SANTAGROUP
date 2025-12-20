@@ -16,7 +16,7 @@
 .logoSection {
   display: flex;
   align-items: center;
-  min-width: 200px; /* Garante espaço para o logo */
+  min-width: 200px;
 }
 
 .logoLink {
@@ -28,7 +28,9 @@
   transition: opacity 0.2s;
 }
 
-.logoLink:hover { opacity: 0.9; }
+.logoLink:hover {
+  opacity: 0.9;
+}
 
 .iconBox {
   width: 40px;
@@ -46,12 +48,12 @@
   letter-spacing: -0.02em;
 }
 
-/* --- MENU DE NAVEGAÇÃO (NOVO) --- */
+/* --- MENU CENTRAL (LINKS) --- */
 .navMenu {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background-color: #262626;
+    background-color: #262626; /* Fundo sutil para o menu */
     padding: 0.25rem;
     border-radius: 10px;
     border: 1px solid #404040;
@@ -75,7 +77,7 @@
     background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Estado Ativo (Página atual) */
+/* Estado Ativo (Página em que você está) */
 .navLink.active {
     background-color: #404040;
     color: #ffffff;
@@ -83,7 +85,7 @@
     box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
-/* --- AÇÕES --- */
+/* --- AÇÕES (DIREITA) --- */
 .actionsSection {
   display: flex;
   align-items: center;
@@ -112,4 +114,19 @@
   color: #ffffff;
 }
 
-.logoutBtn:active { transform: scale(0.98); }
+.logoutBtn:active {
+  transform: scale(0.98);
+}
+
+/* Responsividade para telas muito pequenas */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0 1rem;
+    }
+    .brandName {
+        display: none; /* Esconde o nome em mobile se faltar espaço */
+    }
+    .navLink span {
+        display: none; /* Mostra só ícones em mobile */
+    }
+}
