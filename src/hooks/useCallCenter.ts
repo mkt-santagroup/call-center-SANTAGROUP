@@ -10,7 +10,7 @@ export function useCallCenter() {
   
   // Estado do Filtro
   const [dateFilter, setDateFilter] = useState<DateFilterState>({
-    option: '7days', // Padrão: 7 dias
+    option: 'last7', // CORREÇÃO: Deve ser 'last7' para bater com o type DateFilterOption
     startDate: subDays(new Date(), 6), // Início do dia 6 dias atrás
     endDate: new Date() // Agora
   });
@@ -80,7 +80,8 @@ export function useCallCenter() {
     const s = {
       total: 0, atendidas: 0, recuperadosDia: 0, 
       recuperadosDepois: 0, recuperadosAntes: 0, 
-      naoRecuperados: 0, aguardando: 0, totalCusto: 0
+      naoRecuperados: 0, aguardando: 0, totalCusto: 0,
+      retorno: 0 // Mantendo a correção anterior (propriedade obrigatória)
     };
     const today = new Date();
 

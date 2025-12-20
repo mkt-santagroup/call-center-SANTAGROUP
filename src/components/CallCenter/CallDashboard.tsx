@@ -1,7 +1,7 @@
 // src/components/CallCenter/CallDashboard.tsx
 
 import React, { useState, useCallback } from 'react';
-import styles from './CallDashboard.module.css'; // Assumindo que você tem ou criará esse CSS básico
+import styles from './CallDashboard.module.css';
 import DateFilterPicker, { DateFilterState } from './DateFilterPicker';
 import DashboardKPIs from './DashboardKPIs';
 import DashboardCharts from './DashboardCharts';
@@ -59,8 +59,8 @@ export default function CallDashboard() {
             <DateFilterPicker 
                 filter={dateFilter} 
                 onChange={setDateFilter} 
-                onRefresh={handleRefresh} // <--- Passando a função
-                loading={isLoading}       // <--- Passando o estado
+                onRefresh={handleRefresh} 
+                loading={isLoading}
             />
         </div>
       </div>
@@ -69,10 +69,10 @@ export default function CallDashboard() {
       <DashboardKPIs stats={stats} />
 
       {/* Gráficos */}
+      {/* CORREÇÃO: Removida a propriedade 'loading' que não existe no componente DashboardCharts */}
       <DashboardCharts 
         leadData={leadChartData} 
         callData={callChartData} 
-        loading={loadingMetrics} 
       />
 
       {/* Tabela de Leads */}

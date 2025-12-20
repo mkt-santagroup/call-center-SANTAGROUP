@@ -1,50 +1,63 @@
-// src/components/Layout/Navbar.tsx
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import styles from './Navbar.module.css';
-import { LayoutDashboard, Phone, LogOut } from 'lucide-react';
+import { LogOut, BarChart3, PhoneOutgoing, LayoutDashboard } from 'lucide-react';
 
 export default function Navbar() {
   const router = useRouter();
 
-  // Função para verificar se o link está ativo
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout');
+      router.push('/login');
+    } catch (error) {
+      console.error('Erro ao sair:', error);
+    }
+  };
+
+  // Função auxiliar para verificar se o link está ativo
   const isActive = (path: string) => router.pathname === path;
 
   return (
     <nav className={styles.navbar}>
-      <div className={styles.container}>
-        {/* LOGO / TÍTULO */}
-        <div className={styles.logo}>
-            <span className={styles.logoHighlight}>Santa</span>Group
-        </div>
+      {/* 1. Logo */}
+      <div className={styles.logoSection}>
+        <Link href="/" className={styles.logoLink}>
+          <div className={styles.iconBox}>
+            <BarChart3 size={24} color="#ededed" />
+          </div>
+          <span className={styles.brandName}>
+            Santa<span style={{ color: '#ef4444' }}>Metrics</span>
+          </span>
+        </Link>
+      </div>
 
-        {/* LINKS DE NAVEGAÇÃO */}
-        <div className={styles.links}>
-          <Link 
+      {/* 2. Menu de Navegação (NOVO) */}
+      <div className={styles.navMenu}>
+        <Link 
             href="/" 
-            className={`${styles.link} ${isActive('/') ? styles.active : ''}`}
-          >
+            className={`${styles.navLink} ${isActive('/') ? styles.active : ''}`}
+        >
             <LayoutDashboard size={18} />
-            Dashboard
-          </Link>
-
-          <Link 
+            <span>Dashboard</span>
+        </Link>
+        
+        <Link 
             href="/dialer" 
-            className={`${styles.link} ${isActive('/dialer') ? styles.active : ''}`}
-          >
-            <Phone size={18} />
-            Realizar Chamadas
-          </Link>
-        </div>
+            className={`${styles.navLink} ${isActive('/dialer') ? styles.active : ''}`}
+        >
+            <PhoneOutgoing size={18} />
+            <span>Disparador</span>
+        </Link>
+      </div>
 
-        {/* LADO DIREITO (Logout ou Perfil) */}
-        <div className={styles.actions}>
-            <button className={styles.logoutBtn}>
-                <LogOut size={16} />
-                <span className={styles.logoutText}>Sair</span>
-            </button>
-        </div>
+      {/* 3. Botão Sair */}
+      <div className={styles.actionsSection}>
+        <button onClick={handleLogout} className={styles.logoutBtn} title="Sair do sistema">
+          <LogOut size={18} />
+          <span>Sair</span>
+        </button>
       </div>
     </nav>
   );

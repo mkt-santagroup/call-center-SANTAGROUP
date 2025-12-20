@@ -195,7 +195,8 @@ export default function DialerPage() {
     setResults(initialStatus);
 
     const promises = leads.map(async (lead) => {
-        const success = await processCall(lead.id, lead.whatsapp, smsMessage);
+        // CORREÇÃO: lead.id é number, mas processCall espera string. Adicionado .toString()
+        const success = await processCall(lead.id.toString(), lead.whatsapp || '', smsMessage);
         setResults(prev => ({ ...prev, [lead.id]: success ? 'success' : 'error' }));
     });
 
