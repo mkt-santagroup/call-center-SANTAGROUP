@@ -1,31 +1,28 @@
+// src/pages/dialer.tsx
+
 import React, { useState } from 'react';
 import Head from 'next/head';
 import styles from '@/styles/Dialer.module.css';
-import { PhoneOutgoing, MessageSquare, Play, CheckCircle, XCircle, AlertCircle, Beaker, List } from 'lucide-react';
+import { PhoneOutgoing, MessageSquare, Play, CheckCircle, XCircle, Beaker, List } from 'lucide-react';
 
 import DateFilterPicker, { DateFilterState } from '@/components/CallCenter/DateFilterPicker';
 import { useLeadsTable } from '@/hooks/useLeadsTable';
-import { CallLead } from '@/types';
 
-// --- MODAL DE SMS (CONFIRMAÇÃO DO DISPARO EM MASSA) ---
+// --- MODAL DE SMS ---
 interface SmsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (message: string | null) => void;
   count: number;
 }
-
 const SmsModal = ({ isOpen, onClose, onConfirm, count }: SmsModalProps) => {
   const [smsText, setSmsText] = useState('');
-
   if (!isOpen) return null;
-
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>
         <h3>Configurar Disparo em Massa</h3>
         <p>Você vai disparar para <strong>{count} leads</strong> da lista atual.</p>
-        
         <div className={styles.smsSection}>
           <label>Mensagem SMS (Enviada independente se atender):</label>
           <textarea 
@@ -34,9 +31,7 @@ const SmsModal = ({ isOpen, onClose, onConfirm, count }: SmsModalProps) => {
             onChange={(e) => setSmsText(e.target.value)}
             rows={4}
           />
-          <small>{smsText.length} caracteres</small>
         </div>
-
         <div className={styles.modalActions}>
             <button onClick={onClose} className={styles.btnCancel}>Cancelar</button>
             <button 
@@ -51,46 +46,34 @@ const SmsModal = ({ isOpen, onClose, onConfirm, count }: SmsModalProps) => {
   );
 };
 
-
-// --- MODAL DE TESTE (DISPARO MANUAL) ---
+// --- MODAL DE TESTE ---
 interface TestModalProps {
     isOpen: boolean;
     onClose: () => void;
     onTest: (lines: string[], message: string | null, setLog: (msg: string) => void) => Promise<void>;
 }
-
 const TestModal = ({ isOpen, onClose, onTest }: TestModalProps) => {
     const [inputText, setInputText] = useState('');
     const [smsText, setSmsText] = useState('');
     const [testing, setTesting] = useState(false);
     const [testLog, setTestLog] = useState<string[]>([]);
-
     if (!isOpen) return null;
-
     const addLog = (msg: string) => setTestLog(prev => [...prev, msg]);
-
     const handleRunTest = async () => {
         if (!inputText.trim()) return alert("Digite pelo menos um lead!");
-        
         setTesting(true);
         setTestLog([]); 
         addLog("Iniciando teste...");
-
-        // Divide por linha
         const lines = inputText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-        
         await onTest(lines, smsText.trim() === '' ? null : smsText, addLog);
-        
         addLog("Teste finalizado.");
         setTesting(false);
     };
-
     return (
         <div className={styles.modalOverlay}>
             <div className={styles.modalContent}>
                 <h3>Disparo de Teste (ID Real)</h3>
-                <p>Insira: <code>ID - NUMERO</code> (Para salvar no banco corretamente)</p>
-
+                <p>Insira: <code>ID - NUMERO</code></p>
                 <div className={styles.testGrid}>
                     <div className={styles.testInputs}>
                         <div className={styles.inputGroup}>
@@ -103,7 +86,6 @@ const TestModal = ({ isOpen, onClose, onTest }: TestModalProps) => {
                                 disabled={testing}
                             />
                         </div>
-
                         <div className={styles.inputGroup}>
                             <label><MessageSquare size={14}/> SMS (Opcional)</label>
                             <textarea 
@@ -115,7 +97,6 @@ const TestModal = ({ isOpen, onClose, onTest }: TestModalProps) => {
                             />
                         </div>
                     </div>
-
                     <div className={styles.testLog}>
                         <label>Log de Execução:</label>
                         <div className={styles.logBox}>
@@ -125,14 +106,9 @@ const TestModal = ({ isOpen, onClose, onTest }: TestModalProps) => {
                         </div>
                     </div>
                 </div>
-
                 <div className={styles.modalActions}>
                     {!testing && <button onClick={onClose} className={styles.btnCancel}>Fechar</button>}
-                    <button 
-                        onClick={handleRunTest} 
-                        className={styles.btnTestConfirm}
-                        disabled={testing}
-                    >
+                    <button onClick={handleRunTest} className={styles.btnTestConfirm} disabled={testing}>
                         {testing ? 'Testando...' : <><Beaker size={16}/> Executar</>}
                     </button>
                 </div>
@@ -141,24 +117,28 @@ const TestModal = ({ isOpen, onClose, onTest }: TestModalProps) => {
     );
 };
 
-
 // --- PÁGINA PRINCIPAL ---
 export default function DialerPage() {
+  // 1. ESTADO DA TABELA ATIVA
+  const [activeTable, setActiveTable] = useState<'CALL_LEADS_D1' | 'CALL_LEADS_D2'>('CALL_LEADS_D2');
+
   const [dateFilter, setDateFilter] = useState<DateFilterState>({ 
     option: 'today', startDate: new Date(), endDate: new Date() 
   });
 
-  const { leads, loading, refetchLeads } = useLeadsTable(dateFilter);
+  // 2. Passa activeTable para o hook
+  const { leads, loading, refetchLeads } = useLeadsTable(dateFilter, activeTable);
+  
   const [isBlastModalOpen, setIsBlastModalOpen] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [results, setResults] = useState<Record<string, 'pending' | 'success' | 'error'>>({});
 
-  // CORE: Chama API
+  // 3. CORE: Envia table_name para a API
   const processCall = async (id: string, whatsapp: string, smsMessage: string | null) => {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 min timeout
+        const timeoutId = setTimeout(() => controller.abort(), 120000);
 
         const response = await fetch('/api/process-call', {
             method: 'POST',
@@ -166,7 +146,8 @@ export default function DialerPage() {
             body: JSON.stringify({ 
                 lead_id: id, 
                 whatsapp: whatsapp, 
-                sms_message: smsMessage 
+                sms_message: smsMessage,
+                table_name: activeTable // <--- ENVIA A TABELA SELECIONADA
             }),
             signal: controller.signal
         });
@@ -174,7 +155,6 @@ export default function DialerPage() {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-            // Tenta ler erro
             try { console.error(await response.json()); } catch {}
             return false;
         }
@@ -185,17 +165,14 @@ export default function DialerPage() {
       }
   };
 
-  // DISPARO EM MASSA (Lista carregada)
   const handleBatchBlast = async (smsMessage: string | null) => {
     setIsBlastModalOpen(false);
     setProcessing(true);
-    
     const initialStatus: any = {};
     leads.forEach(l => initialStatus[l.id] = 'pending');
     setResults(initialStatus);
 
     const promises = leads.map(async (lead) => {
-        // CORREÇÃO: lead.id é number, mas processCall espera string. Adicionado .toString()
         const success = await processCall(lead.id.toString(), lead.whatsapp || '', smsMessage);
         setResults(prev => ({ ...prev, [lead.id]: success ? 'success' : 'error' }));
     });
@@ -206,61 +183,62 @@ export default function DialerPage() {
     refetchLeads();
   };
 
-  // DISPARO DE TESTE (ID - NUMERO)
   const handleTestBlast = async (lines: string[], smsMessage: string | null, setLog: (msg: string) => void) => {
       const promises = lines.map(async (line) => {
-          // Parse: "ID - NUMERO" ou "ID, NUMERO"
-          // Tenta separar por hífen ou vírgula
           let id = '';
           let phone = '';
-
-          const parts = line.split(/[-;,]+/); // Aceita - ; ou ,
+          const parts = line.split(/[-;,]+/);
           if (parts.length >= 2) {
               id = parts[0].trim();
               phone = parts[1].trim();
           } else {
-              // Se não tiver separador, assume que é só numero e cria ID falso (mas usuário pediu ID)
               phone = line.trim();
               id = `temp-${Date.now()}`;
               setLog(`[AVISO] "${line}" sem ID. Usando temporário: ${id}`);
           }
-
           if (!phone) return;
 
           setLog(`[${id}] Ligando para ${phone}...`);
-          
           const success = await processCall(id, phone, smsMessage);
-          
-          if (success) {
-              setLog(`[${id}] SUCESSO! Banco atualizado.`);
-          } else {
-              setLog(`[${id}] ERRO na execução.`);
-          }
+          if (success) setLog(`[${id}] SUCESSO! Banco atualizado.`);
+          else setLog(`[${id}] ERRO na execução.`);
       });
-      
       await Promise.all(promises);
   };
 
-  // Contadores
   const successCount = Object.values(results).filter(s => s === 'success').length;
   const errorCount = Object.values(results).filter(s => s === 'error').length;
   const total = leads.length;
+
+  const getBtnStyle = (isActive: boolean) => ({
+    padding: '8px 16px', borderRadius: '8px', border: 'none',
+    fontWeight: 700, cursor: 'pointer',
+    backgroundColor: isActive ? '#ef4444' : '#262626',
+    color: isActive ? '#fff' : '#a3a3a3', transition: 'all 0.2s', fontSize: '0.8rem'
+  });
 
   return (
     <>
       <Head><title>Central de Disparo | SantaGroup</title></Head>
 
       <div className={styles.container}>
-        {/* Header e DatePicker (Igual) */}
         <div className={styles.header}>
             <div>
                 <h1 className={styles.pageTitle}>Disparo em Massa</h1>
-                <p className={styles.pageSubtitle}>Disparador automático com atualização de banco.</p>
+                
+                {/* --- SELETORES NO DIALER --- */}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '8px', marginBottom: '8px' }}>
+                    <button style={getBtnStyle(activeTable === 'CALL_LEADS_D1')} onClick={() => setActiveTable('CALL_LEADS_D1')}>FILA D+1</button>
+                    <button style={getBtnStyle(activeTable === 'CALL_LEADS_D2')} onClick={() => setActiveTable('CALL_LEADS_D2')}>FILA D+2</button>
+                </div>
+
+                <p className={styles.pageSubtitle}>
+                   Disparando na tabela: <strong>{activeTable}</strong>
+                </p>
             </div>
             <DateFilterPicker filter={dateFilter} onChange={setDateFilter} onRefresh={refetchLeads} loading={loading || processing} />
         </div>
 
-        {/* Dashboard Controle */}
         <div className={styles.controlPanel}>
             <div className={styles.statsRow}>
                 <div className={styles.statItem}><span>Total na Lista</span><strong>{total}</strong></div>
@@ -282,7 +260,6 @@ export default function DialerPage() {
             </div>
         </div>
 
-        {/* Lista */}
         <div className={styles.listContainer}>
             <div className={styles.listHeader}>
                 <span>Leads ({dateFilter.option})</span>

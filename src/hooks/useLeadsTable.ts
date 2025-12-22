@@ -6,7 +6,8 @@ import { CallLead } from '@/types';
 import { DateFilterState } from '@/components/CallCenter/DateFilterPicker';
 import { format } from 'date-fns';
 
-export function useLeadsTable(dateFilter: DateFilterState) {
+// ADICIONADO: Parâmetro tableName (Obrigatório ou Opcional)
+export function useLeadsTable(dateFilter: DateFilterState, tableName: string = 'CALL_LEADS_D2') {
   const [leads, setLeads] = useState<CallLead[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -15,7 +16,7 @@ export function useLeadsTable(dateFilter: DateFilterState) {
     
     let allData: CallLead[] = [];
     let page = 0;
-    const pageSize = 1000; // Aumentado para 1000 por requisição
+    const pageSize = 1000;
     let hasMore = true;
 
     // Configuração das datas para o filtro
@@ -34,9 +35,9 @@ export function useLeadsTable(dateFilter: DateFilterState) {
 
     try {
       while (hasMore) {
-        // Seleciona os campos necessários para a Tabela
+        // MUDANÇA AQUI: Usa 'tableName' em vez de string fixa
         let query = supabase
-          .from('CALL_LEADS_D2')
+          .from(tableName) 
           .select('id, passport, name, whatsapp, created_at, called_at, is_recovered, last_login_at_ingestion, current_last_login, time_played, call_history')
           .order('created_at', { ascending: false })
           .range(page * pageSize, (page + 1) * pageSize - 1);
@@ -56,15 +57,13 @@ export function useLeadsTable(dateFilter: DateFilterState) {
           const leadsData = data as unknown as CallLead[];
           allData = [...allData, ...leadsData];
           
-          // Se vier menos que o tamanho da página, acabou
           if (data.length < pageSize) {
             hasMore = false;
           } else {
             page++;
           }
           
-          // Opcional: Trava de segurança para não travar o browser se tiver milhões de leads
-          // Se passar de 5000, para de buscar (ajuste conforme necessidade)
+          // Trava de segurança opcional
           if (allData.length >= 5000) hasMore = false; 
 
         } else {
@@ -79,7 +78,7 @@ export function useLeadsTable(dateFilter: DateFilterState) {
     } finally {
       setLoading(false);
     }
-  }, [dateFilter]);
+  }, [dateFilter, tableName]); // <--- tableName adicionado nas dependências
 
   useEffect(() => {
     fetchLeads();

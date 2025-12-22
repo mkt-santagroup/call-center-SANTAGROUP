@@ -6,11 +6,12 @@ import { DashboardStats, ChartDataLead, ChartDataCall, CallLead } from '@/types'
 import { differenceInDays, isSameDay, format, subDays, eachDayOfInterval } from 'date-fns';
 import { DateFilterState } from '@/components/CallCenter/DateFilterPicker';
 
-export function useDashboardMetrics(dateFilter: DateFilterState) {
+// ADICIONADO: Argumento tableName
+export function useDashboardMetrics(dateFilter: DateFilterState, tableName: string) {
   const [rawData, setRawData] = useState<CallLead[]>([]);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
 
-  // --- 1. BUSCA DE DADOS (COM CORREÇÃO DE TIMEZONE MANUAL) ---
+  // --- 1. BUSCA DE DADOS ---
   const fetchMetricsData = useCallback(async () => {
     setLoadingMetrics(true);
     
@@ -19,7 +20,6 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
     const pageSize = 1000;
     let hasMore = true;
 
-    // Força o range UTC completo para o dia selecionado
     let isoStart = null;
     let isoEnd = null;
 
@@ -36,7 +36,7 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
     try {
       while (hasMore) {
         let query = supabase
-          .from('CALL_LEADS_D2')
+          .from(tableName) // <--- USA A TABELA DINÂMICA
           .select('id, created_at, called_at, is_recovered, current_last_login, call_history, status, call_count')
           .order('created_at', { ascending: false })
           .range(page * pageSize, (page + 1) * pageSize - 1);
@@ -67,49 +67,33 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
     } finally {
       setLoadingMetrics(false);
     }
-  }, [dateFilter]);
+  }, [dateFilter, tableName]); // <--- DEPENDÊNCIA DE TABLENAME
 
   useEffect(() => {
     fetchMetricsData();
   }, [fetchMetricsData]);
 
 
-  // --- HELPERS ---
+  // --- HELPERS E CÁLCULOS (MANTIDOS IGUAIS) ---
   const allowedDatesSet = useMemo(() => {
      if (dateFilter.option === 'lifetime') return null;
-
      const set = new Set<string>();
      const start = dateFilter.startDate || subDays(new Date(), 6);
      const end = dateFilter.endDate || new Date();
-     
      const interval = eachDayOfInterval({ start, end });
-     interval.forEach(date => {
-        set.add(format(date, 'yyyy-MM-dd'));
-     });
-     
+     interval.forEach(date => set.add(format(date, 'yyyy-MM-dd')));
      return set;
   }, [dateFilter]);
 
-
-  // --- 2. CÁLCULO DOS KPIs (Cards) ---
   const stats: DashboardStats = useMemo(() => {
     const s = {
-      total: 0, 
-      atendidas: 0, 
-      recuperadosDia: 0, 
-      recuperadosDepois: 0, 
-      recuperadosAntes: 0,
-      retorno: 0, // <--- NOVA MÉTRICA INICIALIZADA
-      naoRecuperados: 0, 
-      aguardando: 0, 
-      totalCusto: 0
+      total: 0, atendidas: 0, recuperadosDia: 0, recuperadosDepois: 0, 
+      recuperadosAntes: 0, retorno: 0, naoRecuperados: 0, aguardando: 0, totalCusto: 0
     };
-    
     const today = new Date();
 
     rawData.forEach(lead => {
       if (!lead.created_at) return;
-
       const dateKey = lead.created_at.substring(0, 10);
       if (allowedDatesSet && !allowedDatesSet.has(dateKey)) return;
 
@@ -125,11 +109,9 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
       if (foiAtendido) s.atendidas++;
 
       if (lead.is_recovered && lead.current_last_login) {
-        s.retorno++; // <--- INCREMENTA O RETORNO GERAL
-
+        s.retorno++;
         const loginDate = new Date(lead.current_last_login);
         const callDate = lead.called_at ? new Date(lead.called_at) : null;
-        
         if (!callDate || loginDate.getTime() < callDate.getTime()) s.recuperadosAntes++; 
         else if (isSameDay(loginDate, callDate)) s.recuperadosDia++;   
         else s.recuperadosDepois++; 
@@ -141,12 +123,9 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
         s.aguardando++; 
       }
     });
-
     return s;
   }, [rawData, allowedDatesSet]);
 
-
-  // --- 3. GRÁFICO DE TENDÊNCIA ---
   const leadChartData = useMemo(() => {
     let start = dateFilter.startDate;
     let end = dateFilter.endDate || new Date();
@@ -158,7 +137,6 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
          start = subDays(new Date(), 30); 
        }
     }
-    
     if (!start) start = subDays(new Date(), 30);
 
     const daysMap = new Map();
@@ -168,21 +146,14 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
     safeInterval.forEach(d => {
         const key = format(d, 'yyyy-MM-dd');
         daysMap.set(key, { 
-            name: format(d, 'dd/MM'), 
-            total: 0, 
-            atendidas: 0, 
-            rec_dia: 0, 
-            rec_depois: 0, 
-            rec_antes: 0,
-            aguardando: 0,
-            nao_rec: 0
+            name: format(d, 'dd/MM'), total: 0, atendidas: 0, rec_dia: 0, 
+            rec_depois: 0, rec_antes: 0, aguardando: 0, nao_rec: 0
         });
     });
 
     rawData.forEach(lead => {
       if (!lead.created_at) return;
       const dateKey = lead.created_at.substring(0, 10);
-      
       if (daysMap.has(dateKey)) {
         const entry = daysMap.get(dateKey);
         entry.total++; 
@@ -190,16 +161,9 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
         if (lead.is_recovered && lead.current_last_login) {
             const login = new Date(lead.current_last_login);
             const call = lead.called_at ? new Date(lead.called_at) : null;
-            
-            if (!call || login.getTime() < call.getTime()) {
-                entry.rec_antes++; 
-            } 
-            else if (isSameDay(login, call)) {
-                entry.rec_dia++; 
-            } 
-            else {
-                entry.rec_depois++; 
-            }
+            if (!call || login.getTime() < call.getTime()) entry.rec_antes++; 
+            else if (isSameDay(login, call)) entry.rec_dia++; 
+            else entry.rec_depois++; 
         } else {
             entry.aguardando++; 
         }
@@ -214,8 +178,6 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
     return Array.from(daysMap.values()) as ChartDataLead[];
   }, [rawData, dateFilter]);
 
-
-  // --- 4. GRÁFICO DE CHAMADAS ---
   const callChartData = useMemo(() => {
     let start = dateFilter.startDate;
     let end = dateFilter.endDate || new Date();
@@ -227,7 +189,6 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
             start = subDays(new Date(), 30);
         }
     }
-    
     if (!start) start = subDays(new Date(), 30);
     
     const interval = eachDayOfInterval({ start, end });
@@ -236,13 +197,7 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
 
     safeInterval.forEach(d => {
         const key = format(d, 'yyyy-MM-dd');
-        daysMap.set(key, { 
-            name: format(d, 'dd/MM'), 
-            answered: 0, 
-            no_answer: 0, 
-            failed: 0, 
-            busy: 0 
-        });
+        daysMap.set(key, { name: format(d, 'dd/MM'), answered: 0, no_answer: 0, failed: 0, busy: 0 });
     });
 
     rawData.forEach(lead => {
@@ -251,11 +206,9 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
             const callDateRaw = h.date || lead.called_at; 
             if (!callDateRaw) return;
             const dateKey = callDateRaw.substring(0, 10);
-            
             if (daysMap.has(dateKey)) {
                 const entry = daysMap.get(dateKey);
                 const st = (h.status || '').toUpperCase();
-                
                 if (['ANSWERED', 'HUMAN'].includes(st)) entry.answered++;
                 else if (['NO ANSWER', 'NO_ANSWER'].includes(st)) entry.no_answer++;
                 else if (['FAILED', 'CONGESTION', 'ERROR'].includes(st)) entry.failed++;
@@ -268,11 +221,5 @@ export function useDashboardMetrics(dateFilter: DateFilterState) {
     return Array.from(daysMap.values()) as ChartDataCall[];
   }, [rawData, dateFilter]);
 
-  return { 
-    loadingMetrics, 
-    stats, 
-    leadChartData, 
-    callChartData, 
-    refetchMetrics: fetchMetricsData 
-  };
+  return { loadingMetrics, stats, leadChartData, callChartData, refetchMetrics: fetchMetricsData };
 }

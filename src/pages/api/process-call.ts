@@ -25,7 +25,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { lead_id, whatsapp, sms_message } = req.body;
+  // 1. Recebe table_name do corpo da requisição (Default: D2)
+  const { lead_id, whatsapp, sms_message, table_name } = req.body;
+  const TARGET_TABLE = table_name || 'CALL_LEADS_D2';
 
   if (!whatsapp || !lead_id) {
     return res.status(400).json({ error: 'Faltando ID ou Whatsapp.' });
@@ -38,9 +40,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // =================================================================================
-    // 1. LIGAR 
+    // 2. LIGAR 
     // =================================================================================
-    console.log(`[${lead_id}] 1. Disparando para ${phone}...`);
+    console.log(`[${lead_id}] 1. Disparando para ${phone} (Tabela: ${TARGET_TABLE})...`);
 
     const callPayload = {
         phone: phone,
@@ -75,13 +77,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 
     // =================================================================================
-    // 2. ESPERAR 1 MINUTO
+    // 3. ESPERAR 1 MINUTO
     // =================================================================================
     await sleep(60000);
 
 
     // =================================================================================
-    // 3. VERIFICAR STATUS (AGORA LENDO DENTRO DE ITEMS[])
+    // 4. VERIFICAR STATUS
     // =================================================================================
     console.log(`[${lead_id}] 3. Verificando Status...`);
     
@@ -94,26 +96,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const statusData = await statusResponse.json();
-    console.log(`[${lead_id}] Resposta API Status:`, JSON.stringify(statusData));
-
-    // --- CORREÇÃO DO PARSEAMENTO ---
-    // A API retorna { "items": [ { ... } ] }
+    
     let callItem = null;
     if (statusData.items && Array.isArray(statusData.items) && statusData.items.length > 0) {
         callItem = statusData.items[0];
     } else {
-        callItem = statusData; // Fallback caso mude
+        callItem = statusData;
     }
 
     const rawStatus = callItem.status_call || callItem.status || 'unknown';
     const finalPrice = Number(callItem.price ?? 0);
 
-    // Normaliza para nosso controle interno
-    const atendeu = ['answered', 'human', 'completed'].includes(String(rawStatus).toLowerCase());
-
 
     // =================================================================================
-    // 4. MANDAR SMS (SEMPRE se tiver mensagem)
+    // 5. MANDAR SMS
     // =================================================================================
     let smsSent = false;
     
@@ -142,12 +138,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 
     // =================================================================================
-    // 5. ATUALIZAR BANCO (CONTAGEM VIA JSONB)
+    // 6. ATUALIZAR BANCO (USANDO TARGET_TABLE)
     // =================================================================================
-    console.log(`[${lead_id}] 5. Salvando no Banco...`);
+    console.log(`[${lead_id}] 5. Salvando no Banco (${TARGET_TABLE})...`);
 
     const { data: currentLead, error: fetchError } = await supabase
-        .from('CALL_LEADS_D2')
+        .from(TARGET_TABLE) // <--- USA A VARIÁVEL AQUI
         .select('call_history, call_count')
         .eq('id', lead_id)
         .single();
@@ -155,13 +151,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!fetchError && currentLead) {
         const history = Array.isArray(currentLead.call_history) ? currentLead.call_history : [];
         
-        // --- LÓGICA DE CONTAGEM BASEADA NO JSONB ---
         let nextCount = 1;
-
         if (history.length > 0) {
-            // Pega o último item do array
             const lastEntry = history[history.length - 1];
-            // Se tiver call_number, soma +1. Se não, assume que é o tamanho do array + 1
             if (lastEntry.call_number) {
                 nextCount = lastEntry.call_number + 1;
             } else {
@@ -169,7 +161,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
         }
 
-        // Objeto conforme solicitado
         const newLogEntry = {
             data: new Date().toISOString(),
             price: finalPrice,              
@@ -181,17 +172,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const newHistory = [...history, newLogEntry];
 
         await supabase
-            .from('CALL_LEADS_D2')
+            .from(TARGET_TABLE) // <--- USA A VARIÁVEL AQUI
             .update({
                 call_history: newHistory,
-                call_count: nextCount, // Atualiza a coluna principal também
+                call_count: nextCount,
                 called_at: new Date().toISOString()
             })
             .eq('id', lead_id);
             
-        console.log(`[${lead_id}] Sucesso! Call #${nextCount} salva. Status: ${rawStatus}, Preço: ${finalPrice}`);
+        console.log(`[${lead_id}] Sucesso! Call #${nextCount} salva em ${TARGET_TABLE}.`);
     } else {
-        console.error(`[${lead_id}] Erro ao buscar lead:`, fetchError);
+        console.error(`[${lead_id}] Erro ao buscar lead na tabela ${TARGET_TABLE}:`, fetchError);
     }
 
     return res.status(200).json({ 
